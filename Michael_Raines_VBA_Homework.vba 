@@ -1,0 +1,175 @@
+Sub Stock()
+
+'Establish loop through all sheets
+For Each ws In Worksheets
+
+'Set Variables
+Dim TickerSymbol As String
+Dim StockOpen As Double
+Dim StockClose As Double
+Dim Volume As LongLong
+
+
+'Set all opening values
+StockOpen = ws.Range("c2").Value
+'StockClose = 0
+'Volume = 0
+
+'Format Results Chart
+Dim ResultsCharts As Integer
+ResultsCharts = 2
+
+'Find LastRow of data in sheets
+'Counts last line of rows for the i loop
+lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+'Run the Loop
+For i = 2 To lastrow
+    
+'StockOpen = Cells(i, 3).Value
+'Make sure we are still on the same ticker, if not
+If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+  
+    'Set Ticker name
+    TickerSymbol = ws.Cells(i, 1).Value
+    
+    'Grab last date for this stocks closing price
+    StockClose = ws.Cells(i, 6).Value
+    
+ 
+    'Add to TotalVolume total
+    Volume = Volume + ws.Cells(i, 7).Value
+    
+    'print to results chart
+        '--Ticker
+        ws.Range("i" & ResultsCharts).Value = TickerSymbol
+        '-- Total Volume
+        ws.Range("l" & ResultsCharts).Value = Volume
+        '--Change from open of year to close
+        ws.Range("j" & ResultsCharts).Value = StockClose - StockOpen
+        '--Format cell colors
+            If ws.Range("J" & ResultsCharts).Value < 0 Then
+                        ws.Range("J" & ResultsCharts).Interior.ColorIndex = 3
+                        Else
+                        ws.Range("J" & ResultsCharts).Interior.ColorIndex = 4
+                        End If
+       '--Compute yearly change (eliminate divide by zero error)
+            If StockOpen <> 0 Then
+            ws.Range("k" & ResultsCharts).Value = ws.Range("j" & ResultsCharts).Value / StockOpen
+            Else
+            End If
+            ws.Range("K" & ResultsCharts).NumberFormat = "0.00%"
+    
+    
+        'add new line to results chart
+        ResultsCharts = ResultsCharts + 1
+    
+    'Reset total Value
+    Volume = 0
+    StockOpen = 0
+    'Set new opening
+    StockOpen = ws.Cells(i + 1, 3).Value
+    
+Else
+    'keep adding to TotalVolume
+    Volume = Volume + ws.Cells(i, 7).Value
+
+End If
+
+
+Next i
+
+'Add Headers To Columns of all worksheets
+ws.Cells(1, 9).Value = "Ticker Symbol"
+ws.Cells(1, 10).Value = "Yearly Change $"
+ws.Cells(1, 11).Value = "Percent Change"
+ws.Cells(1, 12).Value = "Total Stock Volume"
+
+
+Next ws
+
+End Sub
+
+Sub FindBonus()
+
+'Establish loop through all sheets
+For Each wsb In Worksheets
+
+'Set Variables
+Dim BiggestName As String
+Dim BiggestNum As Double
+Dim LeastName As String
+Dim LeastNum As Double
+Dim VolumeName As String
+Dim VolumeNum As LongLong
+
+'Define first value to compare in loop
+BiggestNum = wsb.Cells(2, 11).Value
+LeastNum = wsb.Cells(2, 11).Value
+
+'Find LastRow of  results data in sheets
+'Counts last line of rows for the j loop (used i above so change it to new letter)
+endrow = wsb.Cells(Rows.Count, 9).End(xlUp).Row
+
+'Run the Loop
+For j = 2 To endrow
+
+    'If new number is less than established low, it replaces the least number & grabs the ticker name otherwise
+    If wsb.Cells(j, 11).Value < LeastNum Then
+        LeastNum = wsb.Cells(j, 11).Value
+        LeastName = wsb.Cells(j, 9).Value
+ 
+    'If new number is higher than established high, it replaces the biggest number & grabs the ticker name
+    ElseIf wsb.Cells(j, 11).Value > BiggestNum Then
+        BiggestNum = wsb.Cells(j, 11).Value
+        BiggestName = wsb.Cells(j, 9).Value
+
+    End If
+
+
+Next j
+
+'Define first value to compare in loop
+VolumeNum = wsb.Cells(2, 12).Value
+
+'Find LastRow of  results data in sheets
+'Counts last line of rows for the k loop (used i & j above so change it to new letter)
+thirdendrow = Cells(Rows.Count, 9).End(xlUp).Row
+
+'Run the Loop
+For k = 2 To thirdendrow
+ 
+ 'If the new number is greater than the established, it becomes the new highest number and grab the name
+    If wsb.Cells(k, 12).Value > VolumeNum Then
+        VolumeNum = wsb.Cells(k, 12).Value
+        VolumeName = wsb.Cells(k, 9).Value
+    Else
+    End If
+
+Next k
+
+'Build results table
+wsb.Cells(3, 16).Value = LeastName
+wsb.Cells(3, 17).Value = LeastNum
+wsb.Cells(3, 17).NumberFormat = "0.00%"
+wsb.Cells(2, 16).Value = BiggestName
+wsb.Cells(2, 17).Value = BiggestNum
+wsb.Cells(2, 17).NumberFormat = "0.00%"
+wsb.Cells(4, 16).Value = VolumeName
+wsb.Cells(4, 17).Value = VolumeNum
+
+'Add Headers To Columns of all worksheets
+wsb.Cells(2, 15).Value = "Greatest % Increase"
+wsb.Cells(3, 15).Value = "Greatest % Decrease"
+wsb.Cells(4, 15).Value = "Greatest Total Volume"
+wsb.Cells(1, 16).Value = "Ticker"
+wsb.Cells(1, 17).Value = "Value"
+
+'make it readable by autofitting the text
+wsb.UsedRange.EntireColumn.AutoFit
+
+Next wsb
+
+
+
+End Sub
